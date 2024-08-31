@@ -1,16 +1,19 @@
-const puppeteer = require('puppeteer');
-require("dotenv").config()  
+import { launch } from 'puppeteer';
+import dotenv from 'dotenv'
+dotenv.config()  
 let browser;
 
+// const executablePath = await new Promise(resolve => locateChrome((arg) => resolve(arg))) || '';
+
 const joinMeeting = async (meetingId, meetingPassCode, joineeName)=>{
-    browser = await puppeteer.launch({
-        headless: true,
-        executablePath: '/usr/bin/chromium-browser',
+    browser = await launch({
+        headless: 'new',
         args:[
             '--no-sandbox',
             '--disable-gpu',
             '--enable-webgl',
-            '--window-size=800,800'
+            '--window-size=800,800',
+            '--disable-setuid-sandbox'
         ],
         ignoreDefaultArgs: ['--disable-extensions']
     }); 
@@ -38,3 +41,4 @@ const joinMeeting = async (meetingId, meetingPassCode, joineeName)=>{
 
 joinMeeting(process.env.meetingId, process.env.meetingPasscode, process.env.joineeName)
 .catch( e => console.log(e))
+.finally(async() => await browser?.close() )
