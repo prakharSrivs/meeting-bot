@@ -3,11 +3,10 @@ import dotenv from 'dotenv'
 dotenv.config()  
 let browser;
 
-// const executablePath = await new Promise(resolve => locateChrome((arg) => resolve(arg))) || '';
-
 const joinMeeting = async (meetingId, meetingPassCode, joineeName)=>{
+    console.log("Bot Intialized");
     browser = await launch({
-        headless: 'new',
+        headless: "new",
         args:[
             '--no-sandbox',
             '--disable-gpu',
@@ -17,7 +16,9 @@ const joinMeeting = async (meetingId, meetingPassCode, joineeName)=>{
         ],
         ignoreDefaultArgs: ['--disable-extensions']
     }); 
+    console.log("Browser Launched");
     const page = await browser.newPage();
+    page.setDefaultTimeout(60000);  
     const ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36";
     await page.setUserAgent(ua);
     await page.goto("https://app.zoom.us/wc/join");
@@ -37,8 +38,19 @@ const joinMeeting = async (meetingId, meetingPassCode, joineeName)=>{
         els.find(el => el.textContent.trim() === "Join").click()
       );
     await frame.waitForSelector(".join-dialog");
+    await frame.$$eval("button", els =>
+        els.find( el => el.textContent.trim() === "Join Audio by Computer" ).click()
+    )
+    console.log("Meeting Joined");
+    await frame.$$eval("span",els => {
+        els.find( el => el.textContent.trim() === "Leave" ).click();
+    })
+    await frame.$$eval("button", el =>
+        el.find( el => el.textContent.trim() === "Leave Meeting" ).click()
+    )
+    console.log("Meeting Exited");
 }
 
 joinMeeting(process.env.meetingId, process.env.meetingPasscode, process.env.joineeName)
 .catch( e => console.log(e))
-.finally(async() => await browser?.close() )
+.finally( () => browser?.close() )
